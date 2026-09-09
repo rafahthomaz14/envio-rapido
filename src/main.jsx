@@ -96,7 +96,6 @@ const CATEGORIES = [
 const PAYMENT_METHODS = [
   { value: "PIX", icon: "💠" },
   { value: "Dinheiro", icon: "💵" },
-  { value: "Cartão", icon: "💳" },
 ];
 
 const money = (value) =>
