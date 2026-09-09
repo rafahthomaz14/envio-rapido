@@ -11,12 +11,18 @@ import {
   ShoppingBag,
   Sparkles,
   Trash2,
-  X,
 } from "lucide-react";
 import "./index.css";
 
-// MVP: troque os produtos e o número abaixo pelos seus dados.
+// =========================
+// CONFIGURAÇÕES
+// =========================
+
 const DELIVERY_FEE = 8;
+
+// =========================
+// PRODUTOS
+// =========================
 
 const PRODUCTS = [
   {
@@ -95,12 +101,20 @@ const CATEGORIES = [
   "Outros",
 ];
 
+// =========================
+// FORMATAÇÃO
+// =========================
+
 function money(value) {
   return value.toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
   });
 }
+
+// =========================
+// APP
+// =========================
 
 function App() {
   const [cart, setCart] = useState({});
@@ -114,11 +128,14 @@ function App() {
     reference: "",
   });
 
-  // NOVOS CAMPOS
   const [phone, setPhone] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
 
   const [sent, setSent] = useState(false);
+
+  // =========================
+  // ITENS DO CARRINHO
+  // =========================
 
   const items = useMemo(
     () =>
@@ -128,6 +145,10 @@ function App() {
       })),
     [cart]
   );
+
+  // =========================
+  // VALORES
+  // =========================
 
   const subtotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -141,14 +162,23 @@ function App() {
     0
   );
 
+  // =========================
+  // FILTRO
+  // =========================
+
   const filtered =
     category === "Todos"
       ? PRODUCTS
       : PRODUCTS.filter((p) => p.category === category);
 
+  // =========================
+  // ADICIONAR / REMOVER
+  // =========================
+
   function changeQuantity(id, delta) {
     setCart((current) => {
       const next = { ...current };
+
       const quantity = (next[id] || 0) + delta;
 
       if (quantity <= 0) {
@@ -161,10 +191,16 @@ function App() {
     });
   }
 
+  // =========================
+  // MENSAGEM DO PEDIDO
+  // =========================
+
   function createOrderMessage() {
     const lines = [
       "🛵 *NOVO PEDIDO — Bora Bebê*",
       "",
+
+      "🛒 *ITENS DO PEDIDO*",
 
       ...items.map(
         (item) =>
@@ -174,6 +210,7 @@ function App() {
       ),
 
       "",
+
       `Subtotal: ${money(subtotal)}`,
       `Entrega: ${money(DELIVERY_FEE)}`,
       `*Total: ${money(total)}*`,
@@ -201,13 +238,18 @@ function App() {
     return lines.join("\n");
   }
 
+  // =========================
+  // ENVIAR PEDIDO
+  // =========================
+
   async function sendOrder() {
     if (
       !address.street ||
       !address.number ||
       !address.neighborhood ||
       !phone ||
-      !paymentMethod
+      !paymentMethod ||
+      !items.length
     ) {
       return;
     }
@@ -227,9 +269,28 @@ function App() {
         throw new Error("Falha ao enviar pedido");
       }
 
+      // =========================
+      // LIMPA O CARRINHO
+      // =========================
+
+      setCart({});
+
+      // Limpa os dados do pedido
+      setAddress({
+        street: "",
+        number: "",
+        neighborhood: "",
+        reference: "",
+      });
+
+      setPhone("");
+      setPaymentMethod("");
+
+      // Mostra tela de sucesso
       setSent(true);
     } catch (error) {
       console.error(error);
+
       alert(
         "Não foi possível enviar o pedido agora. Tente novamente."
       );
@@ -257,8 +318,8 @@ function App() {
           </h1>
 
           <p className="mt-3 text-slate-500">
-            Seu pedido foi enviado. Em breve entraremos em contato para
-            confirmar a entrega.
+            Seu pedido foi enviado. Em breve entraremos em contato
+            para confirmar a entrega.
           </p>
 
           <button
@@ -285,10 +346,13 @@ function App() {
       address.number &&
       address.neighborhood &&
       phone &&
-      paymentMethod;
+      paymentMethod &&
+      items.length > 0;
 
     return (
       <div className="min-h-screen bg-[#f5f7f5]">
+        {/* HEADER */}
+
         <header className="sticky top-0 z-20 border-b border-black/5 bg-[#f5f7f5]/90 px-5 py-4 backdrop-blur-xl">
           <div className="mx-auto flex max-w-xl items-center gap-3">
             <button
@@ -311,38 +375,133 @@ function App() {
         </header>
 
         <main className="mx-auto max-w-xl px-5 pb-32 pt-6">
-          {/* RESUMO DO PEDIDO */}
+          {/* =========================
+              CARRINHO
+          ========================= */}
 
-          <div className="rounded-[2rem] bg-[#07110d] p-6 text-white shadow-xl shadow-emerald-950/10">
-            <div className="flex items-start justify-between">
+          <section className="rounded-[2rem] bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-white/55">
-                  Total do pedido
-                </p>
+                <h3 className="text-xl font-black text-slate-950">
+                  Seu carrinho
+                </h3>
 
-                <p className="mt-1 text-3xl font-black">
+                <p className="mt-1 text-sm text-slate-500">
+                  {itemCount}{" "}
+                  {itemCount === 1 ? "item" : "itens"} no pedido
+                </p>
+              </div>
+
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-[#0d9f61]">
+                <ShoppingBag size={21} />
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-3">
+              {items.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-3 rounded-2xl bg-[#f5f7f5] p-3"
+                >
+                  {/* PRODUTO */}
+
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white text-3xl shadow-sm">
+                    {item.emoji}
+                  </div>
+
+                  {/* NOME + PREÇO */}
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-black text-slate-950">
+                      {item.name}
+                    </p>
+
+                    <p className="mt-1 text-xs text-slate-400">
+                      {money(item.price)} cada
+                    </p>
+                  </div>
+
+                  {/* QUANTIDADE */}
+
+                  <div className="flex items-center gap-1 rounded-xl bg-white p-1 shadow-sm">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        changeQuantity(item.id, -1)
+                      }
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-700 transition hover:bg-slate-100 active:scale-95"
+                    >
+                      {item.quantity === 1 ? (
+                        <Trash2 size={15} />
+                      ) : (
+                        <Minus size={16} />
+                      )}
+                    </button>
+
+                    <span className="w-6 text-center text-sm font-black text-slate-950">
+                      {item.quantity}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        changeQuantity(item.id, 1)
+                      }
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0d9f61] text-white transition active:scale-95"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+
+                  {/* TOTAL DO ITEM */}
+
+                  <div className="hidden w-20 text-right sm:block">
+                    <p className="text-sm font-black text-slate-950">
+                      {money(item.price * item.quantity)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* RESUMO */}
+
+            <div className="mt-5 border-t border-slate-100 pt-5">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">
+                  Subtotal
+                </span>
+
+                <span className="font-bold text-slate-950">
+                  {money(subtotal)}
+                </span>
+              </div>
+
+              <div className="mt-2 flex justify-between text-sm">
+                <span className="text-slate-500">
+                  Entrega
+                </span>
+
+                <span className="font-bold text-slate-950">
+                  {money(DELIVERY_FEE)}
+                </span>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between rounded-2xl bg-[#07110d] p-4 text-white">
+                <span className="font-bold">
+                  Total
+                </span>
+
+                <span className="text-2xl font-black">
                   {money(total)}
-                </p>
-              </div>
-
-              <div className="rounded-2xl bg-white/10 p-3">
-                <ShoppingBag size={23} />
+                </span>
               </div>
             </div>
+          </section>
 
-            <div className="mt-5 flex items-center justify-between border-t border-white/10 pt-4 text-sm">
-              <span className="text-white/60">
-                {itemCount}{" "}
-                {itemCount === 1 ? "item" : "itens"}
-              </span>
-
-              <span className="font-bold text-emerald-300">
-                Entrega {money(DELIVERY_FEE)}
-              </span>
-            </div>
-          </div>
-
-          {/* ENDEREÇO */}
+          {/* =========================
+              ENDEREÇO
+          ========================= */}
 
           <section className="mt-6 rounded-[2rem] bg-white p-6 shadow-sm">
             <h3 className="text-xl font-black text-slate-950">
@@ -432,12 +591,16 @@ function App() {
                 <input
                   type="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) =>
+                    setPhone(e.target.value)
+                  }
                   placeholder="(16) 99999-9999"
                 />
               </label>
 
-              {/* PAGAMENTO */}
+              {/* =========================
+                  PAGAMENTO
+              ========================= */}
 
               <div className="mt-2">
                 <span className="text-sm font-bold text-slate-950">
@@ -449,14 +612,18 @@ function App() {
 
                   <button
                     type="button"
-                    onClick={() => setPaymentMethod("PIX")}
-                    className={`rounded-2xl border p-4 text-center transition ${
+                    onClick={() =>
+                      setPaymentMethod("PIX")
+                    }
+                    className={`rounded-2xl border p-4 text-center transition active:scale-95 ${
                       paymentMethod === "PIX"
                         ? "border-[#0d9f61] bg-emerald-50 text-[#0d9f61]"
                         : "border-slate-200 bg-white text-slate-600"
                     }`}
                   >
-                    <div className="text-xl">💠</div>
+                    <div className="text-xl">
+                      💠
+                    </div>
 
                     <div className="mt-1 text-sm font-black">
                       PIX
@@ -470,13 +637,15 @@ function App() {
                     onClick={() =>
                       setPaymentMethod("Dinheiro")
                     }
-                    className={`rounded-2xl border p-4 text-center transition ${
+                    className={`rounded-2xl border p-4 text-center transition active:scale-95 ${
                       paymentMethod === "Dinheiro"
                         ? "border-[#0d9f61] bg-emerald-50 text-[#0d9f61]"
                         : "border-slate-200 bg-white text-slate-600"
                     }`}
                   >
-                    <div className="text-xl">💵</div>
+                    <div className="text-xl">
+                      💵
+                    </div>
 
                     <div className="mt-1 text-sm font-black">
                       Dinheiro
@@ -490,13 +659,15 @@ function App() {
                     onClick={() =>
                       setPaymentMethod("Cartão")
                     }
-                    className={`rounded-2xl border p-4 text-center transition ${
+                    className={`rounded-2xl border p-4 text-center transition active:scale-95 ${
                       paymentMethod === "Cartão"
                         ? "border-[#0d9f61] bg-emerald-50 text-[#0d9f61]"
                         : "border-slate-200 bg-white text-slate-600"
                     }`}
                   >
-                    <div className="text-xl">💳</div>
+                    <div className="text-xl">
+                      💳
+                    </div>
 
                     <div className="mt-1 text-sm font-black">
                       Cartão
@@ -519,7 +690,9 @@ function App() {
           </section>
         </main>
 
-        {/* BOTÃO FINALIZAR */}
+        {/* =========================
+            BOTÃO FINALIZAR
+        ========================= */}
 
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-black/5 bg-white/90 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-xl">
           <div className="mx-auto max-w-xl">
@@ -533,10 +706,11 @@ function App() {
             </button>
 
             <p className="mt-2 text-center text-[11px] text-slate-400">
-              Entrega mínima de {money(DELIVERY_FEE)} • pagamento{" "}
               {paymentMethod
-                ? `em ${paymentMethod.toLowerCase()}`
-                : "combinado na entrega"}
+                ? `Pagamento em ${paymentMethod.toLowerCase()}`
+                : "Escolha uma forma de pagamento"}
+              {" • "}
+              Total {money(total)}
             </p>
           </div>
         </div>
@@ -550,6 +724,8 @@ function App() {
 
   return (
     <div className="min-h-screen bg-[#f5f7f5] pb-32">
+      {/* HEADER */}
+
       <header className="bg-[#07110d] text-white">
         <div className="mx-auto max-w-xl px-5 pb-8 pt-5">
           <div className="flex items-center justify-between">
@@ -562,6 +738,8 @@ function App() {
                 Bora Bebê
               </span>
             </div>
+
+            {/* ÍCONE DO CARRINHO */}
 
             <button
               onClick={() =>
@@ -642,6 +820,8 @@ function App() {
                   key={product.id}
                   className="group flex items-center gap-4 rounded-[1.5rem] bg-white p-3 shadow-sm transition hover:shadow-md"
                 >
+                  {/* IMAGEM */}
+
                   <div
                     className={`relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl ${
                       product.featured
@@ -660,6 +840,8 @@ function App() {
                     )}
                   </div>
 
+                  {/* INFORMAÇÕES */}
+
                   <div className="min-w-0 flex-1 py-1">
                     <h3 className="truncate font-black text-slate-950">
                       {product.name}
@@ -673,6 +855,8 @@ function App() {
                       {money(product.price)}
                     </p>
                   </div>
+
+                  {/* QUANTIDADE */}
 
                   <div className="shrink-0">
                     {quantity === 0 ? (
@@ -741,7 +925,9 @@ function App() {
         </div>
       </main>
 
-      {/* CARRINHO */}
+      {/* =========================
+          BOTÃO DO CARRINHO
+      ========================= */}
 
       {items.length > 0 && (
         <div className="fixed inset-x-0 bottom-0 z-30 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
@@ -758,7 +944,9 @@ function App() {
                 <span className="text-left">
                   <span className="block text-[11px] font-bold text-white/65">
                     {itemCount}{" "}
-                    {itemCount === 1 ? "item" : "itens"}
+                    {itemCount === 1
+                      ? "item"
+                      : "itens"}
                   </span>
 
                   <span className="block font-black">
@@ -768,7 +956,7 @@ function App() {
               </span>
 
               <span className="flex items-center gap-1 font-black">
-                Continuar
+                Ver carrinho
                 <ChevronRight size={20} />
               </span>
             </button>
