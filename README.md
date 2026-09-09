@@ -62,7 +62,7 @@ TELEGRAM_CHAT_ID = seu_chat_id
 
 Depois faça um novo deploy.
 
-## 5. Importante
+## 5. Importante .
 
 O navegador do cliente **não recebe o token do Telegram**. O React chama `/api/send-order` e essa função de backend usa as variáveis secretas para mandar a mensagem.
 
